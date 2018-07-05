@@ -132,7 +132,10 @@ public class NotifyDownloadService extends Service {
                     String savePath = String.format(Contacts.DOWNLOAD_PATH, Environment.getExternalStorageDirectory(), getPackageName());
                     URL url = new URL(mBaseVersion.getUrl());
                     conn = (HttpURLConnection) url.openConnection();
+                    //处理下载读取长度为-1 问题
+                    conn.setRequestProperty("Accept-Encoding", "identity");
                     conn.connect();
+
                     long length = conn.getContentLength();
                     File file = new File(savePath);
                     if (!file.exists()){
@@ -165,6 +168,9 @@ public class NotifyDownloadService extends Service {
                             mNotification = mBuilder.build();
                             mNotification.flags = Notification.FLAG_ONLY_ALERT_ONCE;
                             mNotificationManager.notify(NOTIFY_DOWNLOAD_ID, mNotification);
+                            if (progress == 100){
+                                publishProgress((int)(count * 100 / length));//计算当前进度， 更新进度
+                            }
                         }
 
                     }while (!mCancelUpdata);

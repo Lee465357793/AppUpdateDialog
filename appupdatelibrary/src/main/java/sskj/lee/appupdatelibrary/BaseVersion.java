@@ -17,7 +17,7 @@ public abstract class BaseVersion implements Serializable{
      */
     public final static int NOTIFYCATION_STYLE = 10010;
     /**
-     * 默认样式下载(静默下载)
+     * 默认样式下载(更新框内下载)
      */
     public final static int DEFAULT_STYLE = 10012;
     /**

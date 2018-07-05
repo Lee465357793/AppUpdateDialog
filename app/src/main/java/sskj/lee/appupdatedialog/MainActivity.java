@@ -1,6 +1,7 @@
 package sskj.lee.appupdatedialog;
 
 import android.app.FragmentManager;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -29,6 +30,8 @@ public class MainActivity extends AppCompatActivity {
             }
                 break;
             case R.id.notifycation:
+
+
                 SimpleUpdateFragment updateFragment = new SimpleUpdateFragment();
                 Bundle bundle = new Bundle();
                 bundle.putSerializable(BaseUpdateDialogFragment.INTENT_KEY, initData(BaseVersion.NOTIFYCATION_STYLE));
@@ -41,7 +44,7 @@ public class MainActivity extends AppCompatActivity {
 
     private VersionInfo initData(int dialogStyle) {
         VersionInfo versionInfo = new VersionInfo();
-        versionInfo.setUrl("http://www.paicl.net/download/lela.apk");
+        versionInfo.setUrl("https://www.ff.songcaijubao.com/uploads/app/android/20180628/03931191cbaea7650978e88f25d9dbca.apk");
         versionInfo.setViewStyle(dialogStyle);
         return versionInfo;
     }

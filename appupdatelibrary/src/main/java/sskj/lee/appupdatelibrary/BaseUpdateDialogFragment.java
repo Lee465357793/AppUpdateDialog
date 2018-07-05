@@ -169,6 +169,8 @@ public abstract class BaseUpdateDialogFragment extends DialogFragment {
                     String savePath = String.format(Contacts.DOWNLOAD_PATH, Environment.getExternalStorageDirectory(), mActivity.getPackageName());
                     URL url = new URL(mVersionData.getUrl());
                     conn = (HttpURLConnection) url.openConnection();
+                    //处理下载读取长度为-1 问题
+                    conn.setRequestProperty("Accept-Encoding", "identity");
                     conn.connect();
                     long length = conn.getContentLength();
                     File file = new File(savePath);

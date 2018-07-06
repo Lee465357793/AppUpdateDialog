@@ -2,7 +2,9 @@ package sskj.lee.appupdatelibrary;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.DialogFragment;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -31,6 +33,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 import static android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION;
+
 /**
  * ProjectName：DialogDemo
  * DESC: (类描述)
@@ -73,7 +76,7 @@ public abstract class BaseUpdateDialogFragment extends DialogFragment {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if (mDownloadTask!= null){
+        if (mDownloadTask != null) {
             mDownloadTask.cancel(true);
         }
     }
@@ -82,10 +85,12 @@ public abstract class BaseUpdateDialogFragment extends DialogFragment {
 
     /**
      * 初始化UI
+     *
      * @param view
      * @param versionData
      */
     protected abstract void initView(View view, BaseVersion versionData);
+
     /**
      * 当下载开始前（MainThred）
      */
@@ -93,6 +98,7 @@ public abstract class BaseUpdateDialogFragment extends DialogFragment {
 
     /**
      * 当下载中（MainThred）
+     *
      * @param progress
      */
     protected abstract void onDownLoadUpdate(int progress);
@@ -100,7 +106,8 @@ public abstract class BaseUpdateDialogFragment extends DialogFragment {
     /**
      * 当下在完成
      */
-    protected void onDownLoadFinish(){};
+    protected void onDownLoadFinish() {
+    }
 
     /**
      * 校验权限
@@ -109,14 +116,23 @@ public abstract class BaseUpdateDialogFragment extends DialogFragment {
         if (ContextCompat.checkSelfPermission(mActivity, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(mActivity, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, PERMISSION_REQUEST_WRITE_SD);
         } else {
-            if (mVersionData.getViewStyle() == BaseVersion.NOTIFYCATION_STYLE){
+            if (mVersionData.isMustUp()) {
+                openDownloadTask();
+            } else if (mVersionData.getViewStyle() == BaseVersion.NOTIFYCATION_STYLE) {
                 mActivity.startService(new Intent(mActivity, NotifyDownloadService.class).putExtra(INTENT_KEY, mVersionData));
                 dismiss();//关掉更新提示dialog
-            }else {
-                mDownloadTask = new DownloadTask();
-                mDownloadTask.execute(mVersionData.getUrl());
+            } else {
+                openDownloadTask();
             }
         }
+    }
+
+    /**
+     * 开启下载
+     */
+    protected void openDownloadTask() {
+        mDownloadTask = new DownloadTask();
+        mDownloadTask.execute(mVersionData.getUrl());
     }
 
     @Override
@@ -131,23 +147,30 @@ public abstract class BaseUpdateDialogFragment extends DialogFragment {
         checkPermission();
     }
 
-//    /**
-//     * 创建弹窗下载
-//     */
-//    private void showDialog() {
-//        AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
-//        View inflate = LayoutInflater.from(mActivity).inflate(R.layout.dialog_download_layout, null);
-//        mProgressbar = inflate.findViewById(R.id.download_progressbar);
-//        mProgressText = inflate.findViewById(R.id.download_progress_text);
-//        builder.setView(inflate);
-//        builder.setCancelable(false);
-//        mDownloadingDialog = builder.create();
-//        mDownloadingDialog.show();
-//        mDownloadTask = new DownloadTask();
-//        mDownloadTask.execute(mVersionData.getUrl());
-//    }
+    /**
+     * 强制更新提示
+     */
+    public void showMustUpDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
+        builder.setTitle("温馨提示")
+                .setMessage("本次更新是我们的一大步，放弃更新将会退出应用哦~!")
+                .setNegativeButton("关闭应用", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                        getActivity().finish();
+                    }
+                })
+                .setPositiveButton("继续更新", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                        openDownloadTask();
+                    }
+                }).show();
+    }
 
-    class DownloadTask extends AsyncTask<String, Integer, File> {
+    public class DownloadTask extends AsyncTask<String, Integer, File> {
 
         private boolean mCancelUpdata = false;
 
@@ -160,41 +183,40 @@ public abstract class BaseUpdateDialogFragment extends DialogFragment {
         @Override
         protected File doInBackground(String... strings) {
             // 判断SD卡是否存在，并且是否具有读写权限
-            File apkFile= null;
-            if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)){
-                InputStream is= null;
-                FileOutputStream fos= null;
-                HttpURLConnection conn= null;
+            File apkFile = null;
+            if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
+                InputStream is = null;
+                FileOutputStream fos = null;
+                HttpURLConnection conn = null;
                 try {
                     String savePath = String.format(Contacts.DOWNLOAD_PATH, Environment.getExternalStorageDirectory(), mActivity.getPackageName());
                     URL url = new URL(mVersionData.getUrl());
                     conn = (HttpURLConnection) url.openConnection();
-                    //处理下载读取长度为-1 问题
                     conn.setRequestProperty("Accept-Encoding", "identity");
                     conn.connect();
                     long length = conn.getContentLength();
                     File file = new File(savePath);
-                    if (!file.exists()){
+                    if (!file.exists()) {
                         file.mkdirs();
                     }
-                    apkFile = new File(savePath, TextUtils.isEmpty(mVersionData.getVersionName()) ? String.valueOf(System.currentTimeMillis() + ".apk") : mVersionData.getVersionName()+ ".apk");
-                    if (apkFile.exists()){
+                    apkFile = new File(savePath, TextUtils.isEmpty(mVersionData.getVersionName()) ? String.valueOf(System.currentTimeMillis() + ".apk") : mVersionData.getVersionName() + ".apk");
+                    if (apkFile.exists()) {
                         apkFile.delete();
                     }
                     is = conn.getInputStream();//创建输入流
                     fos = new FileOutputStream(apkFile);
-                    long count= 0;
+                    long count = 0;
                     byte[] buf = new byte[1024];
                     do {
                         int readNum = is.read(buf);
-                        if (readNum <= 0){//下载完成
+                        if (readNum <= 0) {//下载完成
                             mCancelUpdata = true;
                             break;
                         }
                         count += readNum;
                         fos.write(buf, 0, readNum);// 写入文件
-                        publishProgress((int)(count * 100 / length));//计算当前进度， 更新进度
-                    }while (!mCancelUpdata);
+                        publishProgress((int) (count * 100 / length));//计算当前进度， 更新进度
+                    } while (!mCancelUpdata);
                     fos.close();
                     is.close();
 
@@ -202,7 +224,7 @@ public abstract class BaseUpdateDialogFragment extends DialogFragment {
                     e.printStackTrace();
                 } catch (IOException e) {
                     e.printStackTrace();
-                }finally {
+                } finally {
                     try {
                         if (fos != null) fos.close();
                         if (is != null) is.close();
@@ -210,7 +232,7 @@ public abstract class BaseUpdateDialogFragment extends DialogFragment {
                     }
                     if (conn != null) conn.disconnect();
                 }
-            }else {
+            } else {
                 Toast.makeText(mActivity, Contacts.DIALOG_SDCARD_NULL, Toast.LENGTH_SHORT).show();
             }
             return apkFile;
@@ -218,13 +240,12 @@ public abstract class BaseUpdateDialogFragment extends DialogFragment {
 
         /**
          * 更新进度
+         *
          * @param values
          */
         @Override
         protected void onProgressUpdate(Integer... values) {
             onDownLoadUpdate(values[0]);
-//            mProgressbar.setProgress(values[0]);
-//            mProgressText.setText(values[0] + "%");
         }
 
         @Override
@@ -234,6 +255,7 @@ public abstract class BaseUpdateDialogFragment extends DialogFragment {
 
         /**
          * 下载完成
+         *
          * @param file
          */
         @Override
@@ -241,7 +263,7 @@ public abstract class BaseUpdateDialogFragment extends DialogFragment {
             super.onPostExecute(file);
             dismiss();//关闭下载中弹窗
             onDownLoadFinish();
-            if (file != null && file.exists()){
+            if (file != null && file.exists()) {
                 Intent intent = new Intent();
                 intent.setAction(Intent.ACTION_VIEW);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

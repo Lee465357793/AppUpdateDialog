@@ -78,4 +78,10 @@ public abstract class BaseVersion implements Serializable{
      * @return default R.drawable.ic_launcher
      */
     public abstract int getNotifyIcon();
+
+    /**
+     * 是否强制更新
+     * @return
+     */
+    public abstract boolean isMustUp();
 }

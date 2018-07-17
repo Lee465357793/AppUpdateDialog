@@ -2,7 +2,6 @@ package sskj.lee.appupdatelibrary;
 
 import android.Manifest;
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.DialogFragment;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -18,6 +17,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
+import android.support.v7.app.AlertDialog;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -105,8 +105,24 @@ public abstract class BaseUpdateDialogFragment extends DialogFragment {
 
     /**
      * 当下在完成
+     * @param file
      */
-    protected void onDownLoadFinish() {
+    protected void onDownLoadFinish(File file) {
+        if (file != null && file.exists()) {
+            Intent intent = new Intent();
+            intent.setAction(Intent.ACTION_VIEW);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            intent.setFlags(FLAG_GRANT_READ_URI_PERMISSION);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                Uri contentUri = FileProvider.getUriForFile(mActivity, mActivity.getPackageName() + ".fileProvider", file);
+                intent.putExtra(MediaStore.EXTRA_OUTPUT, contentUri);
+                intent.setDataAndType(contentUri, "application/vnd.android.package-archive");
+            } else {
+                intent.setDataAndType(Uri.fromFile(file), "application/vnd.android.package-archive");
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            }
+            startActivity(intent);
+        }
     }
 
     /**
@@ -116,13 +132,17 @@ public abstract class BaseUpdateDialogFragment extends DialogFragment {
         if (ContextCompat.checkSelfPermission(mActivity, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(mActivity, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, PERMISSION_REQUEST_WRITE_SD);
         } else {
-            if (mVersionData.isMustUp()) {
-                openDownloadTask();
-            } else if (mVersionData.getViewStyle() == BaseVersion.NOTIFYCATION_STYLE) {
-                mActivity.startService(new Intent(mActivity, NotifyDownloadService.class).putExtra(INTENT_KEY, mVersionData));
-                dismiss();//关掉更新提示dialog
-            } else {
-                openDownloadTask();
+            if (!TextUtils.isEmpty(mVersionData.getUrl())){
+                if (mVersionData.isMustUp()) {
+                    openDownloadTask();
+                } else if (mVersionData.getViewStyle() == BaseVersion.NOTIFYCATION_STYLE) {
+                    mActivity.startService(new Intent(mActivity, NotifyDownloadService.class).putExtra(INTENT_KEY, mVersionData));
+                    dismiss();//关掉更新提示dialog
+                } else {
+                    openDownloadTask();
+                }
+            }else {
+                Toast.makeText(getActivity(), "下载地址不能为空", Toast.LENGTH_SHORT).show();
             }
         }
     }
@@ -262,22 +282,7 @@ public abstract class BaseUpdateDialogFragment extends DialogFragment {
         protected void onPostExecute(File file) {
             super.onPostExecute(file);
             dismiss();//关闭下载中弹窗
-            onDownLoadFinish();
-            if (file != null && file.exists()) {
-                Intent intent = new Intent();
-                intent.setAction(Intent.ACTION_VIEW);
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                intent.setFlags(FLAG_GRANT_READ_URI_PERMISSION);
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    Uri contentUri = FileProvider.getUriForFile(mActivity, mActivity.getPackageName() + ".fileProvider", file);
-                    intent.putExtra(MediaStore.EXTRA_OUTPUT, contentUri);
-                    intent.setDataAndType(contentUri, "application/vnd.android.package-archive");
-                } else {
-                    intent.setDataAndType(Uri.fromFile(file), "application/vnd.android.package-archive");
-                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                }
-                startActivity(intent);
-            }
+            onDownLoadFinish(file);
             mDownloadTask.cancel(true);
         }
     }

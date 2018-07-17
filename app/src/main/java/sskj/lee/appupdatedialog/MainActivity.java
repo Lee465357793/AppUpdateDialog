@@ -44,7 +44,10 @@ public class MainActivity extends AppCompatActivity {
 
     private VersionInfo initData(int dialogStyle) {
         VersionInfo versionInfo = new VersionInfo();
-        versionInfo.setUrl("https://www.ff.songcaijubao.com/uploads/app/android/20180628/03931191cbaea7650978e88f25d9dbca.apk");
+        versionInfo.setContent("版本更新内容\n1.aaaaaaaaaa\n2.bbbbbbbbb");
+        versionInfo.setTitle("版本更新");
+        versionInfo.setMustup(true);
+        versionInfo.setUrl("");
         versionInfo.setViewStyle(dialogStyle);
         return versionInfo;
     }

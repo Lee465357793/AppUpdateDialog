@@ -5,6 +5,8 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import java.io.File;
+
 /**
  * ProjectName：DialogDemo
  * DESC: (类描述)
@@ -39,6 +41,9 @@ public class SimpleUpdateFragment extends BaseUpdateDialogFragment implements Vi
         mDialogConfirm.setOnClickListener(this);
     }
 
+    /**
+     * 当开始下载
+     */
     @Override
     protected void onDownLoadStart() {
         mDialogConfirm.setVisibility(View.GONE);
@@ -46,16 +51,33 @@ public class SimpleUpdateFragment extends BaseUpdateDialogFragment implements Vi
         mDialogPregressbar.setVisibility(View.VISIBLE);
     }
 
+    /**
+     * 下载中，可更新dialog 进度
+     * @param progress
+     */
     @Override
     protected void onDownLoadUpdate(int progress) {
         mDialogPregressbar.setProgress(progress);
+    }
+
+    /**
+     * 下载结束，可自定义操作
+     * @param file
+     */
+    @Override
+    protected void onDownLoadFinish(File file) {
+        super.onDownLoadFinish(file);//自定义操作请删除该行
     }
 
     @Override
     public void onClick(View v) {
         int vid = v.getId();
         if (vid == R.id.update_diglog_close){
-            dismiss();
+            if (mVersionData.isMustUp()){
+                showMustUpDialog();
+            }else {
+                dismiss();
+            }
         }else if (vid == R.id.update_dialog_confirm){
             startDownload();
         }

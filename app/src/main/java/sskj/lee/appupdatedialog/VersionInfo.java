@@ -1,5 +1,7 @@
 package sskj.lee.appupdatedialog;
 
+import android.text.TextUtils;
+
 import sskj.lee.appupdatelibrary.BaseVersion;
 
 /**
@@ -11,41 +13,38 @@ import sskj.lee.appupdatelibrary.BaseVersion;
  * updateDesc:(修改内容)
  */
 public class VersionInfo extends BaseVersion {
-    private String mDescription;
-    private String mVersion;
-    private String mUrl;
 
-    @Override
-    public String getTitle() {
-        return mDescription;
+
+   private String title;
+   private String content;
+   private String version_name;
+   private String url;
+   private boolean mustup;
+
+    public void setTitle(String title) {
+        this.title = title;
     }
 
-    @Override
-    public String getContent() {
-        return mDescription;
+    public void setContent(String content) {
+        this.content = content;
     }
 
-    @Override
-    public String getUrl() {
-        return mUrl;
-    }
-
-    @Override
-    public String getVersionCode() {
-        return null;
-    }
-
-    public void setDescription(String description) {
-        mDescription = description;
-    }
-
-    public void setVersion(String version) {
-        mVersion = version;
+    public void setVersion_name(String version_name) {
+        this.version_name = version_name;
     }
 
     public void setUrl(String url) {
-        mUrl = url;
+        this.url = url;
     }
+
+    public void setMustup(boolean mustup) {
+        this.mustup = mustup;
+    }
+
+//    @Override
+//    public String getVersionName() {
+//        return TextUtils.isEmpty(version_name) ? "default" : version_name;
+//    }
 
     public void setViewStyle(int viewStyle) {
         view_style = viewStyle;
@@ -54,6 +53,26 @@ public class VersionInfo extends BaseVersion {
     @Override
     public int getNotifyIcon() {
         return R.mipmap.ic_launcher;
+    }
+
+    @Override
+    public boolean isMustUp() {
+        return mustup;
+    }
+
+    @Override
+    public String getTitle() {
+        return title;
+    }
+
+    @Override
+    public String getContent() {
+        return content;
+    }
+
+    @Override
+    public String getUrl() {
+        return url;
     }
 
     @Override

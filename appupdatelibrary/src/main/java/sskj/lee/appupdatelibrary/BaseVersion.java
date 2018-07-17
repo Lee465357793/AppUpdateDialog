@@ -52,11 +52,6 @@ public abstract class BaseVersion implements Serializable{
      return "default";
     }
 
-    /**
-     * 版本编号  code
-     * @return
-     */
-    public abstract String getVersionCode();
 
     /**
      * 下载样式 One of {@link #NOTIFYCATION_STYLE}, or {@link #DEFAULT_STYLE}

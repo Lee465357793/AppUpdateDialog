@@ -8,34 +8,23 @@ AppUpdateDialog for Android ；使用DialogFragment 实现自动更新，动态�
 
 * 支持自定义更新通知弹窗界面，继承BaseUpdateDialogFragment，并使用Dialog样式
 
-#### 8.0安装应用配置
-8.0 应用安装需要权限：<uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
-推荐博客：https://blog.csdn.net/growing_tree/article/details/71190741
+#### 扩展性
+继承BaseUpdateDialogFragment, 即可自定义更新提示布局，数据通过Intent()，被BaseUpdateDialogFragment 接收 
 
-```xml
-<service android:name=".NotifyDownloadService"/> <-- 通知栏下载服务 -->
-        
-        <-- 8.0读取本地文件配置 -->
-        <provider
-            android:name="android.support.v4.content.FileProvider"
-            android:authorities="${applicationId}.fileProvider"
-            android:exported="false"
-            android:grantUriPermissions="true">
-            <meta-data
-                android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/file_paths"/>
-        </provider>
+#### 使用步骤
+*1.MyVersion extend BaseVersion
+*2.调用更新弹窗
 
+#### 调用更新弹窗提示
+```java
+SimpleUpdateFragment updateFragment = new SimpleUpdateFragment();
+                Bundle bundle = new Bundle();
+                bundle.putSerializable(BaseUpdateDialogFragment.INTENT_KEY, Serializable extend BaseVersion);
+                updateFragment.setArguments(bundle);
+                FragmentManager transition = getFragmentManager();
+                updateFragment.show(transition, "tag");
 ```
 
-#### xml/file_paths.xml 文件内容
-```xml 
- <-- 8.0读取本地文件配置 -->
-<?xml version="1.0" encoding="utf-8"?>
-<paths>
-    <external-path name="my_download" path="sskj.lee.dialogdemo/download/"/>
-</paths>
-```
 
 #### 版本信息实体基类，自己的实体需要继承该类，并根据需要return 数据
 
@@ -117,18 +106,35 @@ public abstract class BaseVersion implements Serializable{
 
 ```
 
-#### 调用更新弹窗提示
-```java
-SimpleUpdateFragment updateFragment = new SimpleUpdateFragment();
-                Bundle bundle = new Bundle();
-                bundle.putSerializable(BaseUpdateDialogFragment.INTENT_KEY, initData(BaseVersion.NOTIFYCATION_STYLE or DEFAULT_STYLE));
-                updateFragment.setArguments(bundle);
-                FragmentManager transition = getFragmentManager();
-                updateFragment.show(transition, "tag");
+#### 8.0安装应用配置
+8.0 应用安装需要权限：<uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
+推荐博客：https://blog.csdn.net/growing_tree/article/details/71190741
+
+```xml
+<service android:name=".NotifyDownloadService"/> <-- 通知栏下载服务 -->
+        
+        <-- 8.0读取本地文件配置 -->
+        <provider
+            android:name="android.support.v4.content.FileProvider"
+            android:authorities="${applicationId}.fileProvider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths"/>
+        </provider>
+
 ```
 
-#### 扩展性
-继承BaseUpdateDialogFragment, 即可自定义更新提示布局，数据通过Intent()，被BaseUpdateDialogFragment 接收 
+#### xml/file_paths.xml 文件内容
+```xml 
+ <-- 8.0读取本地文件配置 -->
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <external-path name="my_download" path="sskj.lee.dialogdemo/download/"/>
+</paths>
+```
+
 
 
 License

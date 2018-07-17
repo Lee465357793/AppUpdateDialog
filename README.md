@@ -2,11 +2,12 @@
 App应用更新Library
 AppUpdateDialog for Android ；使用DialogFragment 实现自动更新，动态权限申请
 
-效果预览
--------  
+效果预
+-------
 * 支持Dialog，Notification 下载进度展示
-
 * 支持自定义更新通知弹窗界面，继承BaseUpdateDialogFragment，并使用Dialog样式
+
+<img src='https://github.com/Lee465357793/AppUpdateDialog/blob/master/img/20180717_105426.gif' width="300px"/>
 
 #### 扩展性
 继承BaseUpdateDialogFragment, 即可自定义更新提示布局，数据通过Intent()，被BaseUpdateDialogFragment 接收 

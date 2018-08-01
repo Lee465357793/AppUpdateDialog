@@ -1,5 +1,6 @@
 package sskj.lee.appupdatelibrary;
 
+import android.support.v4.app.NotificationManagerCompat;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -79,7 +80,13 @@ public class SimpleUpdateFragment extends BaseUpdateDialogFragment implements Vi
                 dismiss();
             }
         }else if (vid == R.id.update_dialog_confirm){
-            startDownload();
+            NotificationManagerCompat manager = NotificationManagerCompat.from(getActivity().getApplicationContext());
+            boolean isOpened = manager.areNotificationsEnabled();
+            if (isOpened){
+                startDownload();
+            }else {
+                showNotifyPermissionDialog();
+            }
         }
     }
 }

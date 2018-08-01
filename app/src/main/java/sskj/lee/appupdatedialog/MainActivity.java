@@ -31,7 +31,6 @@ public class MainActivity extends AppCompatActivity {
                 break;
             case R.id.notifycation:
 
-
                 SimpleUpdateFragment updateFragment = new SimpleUpdateFragment();
                 Bundle bundle = new Bundle();
                 bundle.putSerializable(BaseUpdateDialogFragment.INTENT_KEY, initData(BaseVersion.NOTIFYCATION_STYLE));
@@ -46,8 +45,8 @@ public class MainActivity extends AppCompatActivity {
         VersionInfo versionInfo = new VersionInfo();
         versionInfo.setContent("版本更新内容\n1.aaaaaaaaaa\n2.bbbbbbbbb");
         versionInfo.setTitle("版本更新");
-        versionInfo.setMustup(true);
-        versionInfo.setUrl("");
+        versionInfo.setMustup(false);
+        versionInfo.setUrl("https://www.ff.songcaijubao.com/uploads/app/android/20180709/7b05c7c6948e09db2908d32f318a824d.apk");
         versionInfo.setViewStyle(dialogStyle);
         return versionInfo;
     }

@@ -12,6 +12,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
@@ -186,6 +187,45 @@ public abstract class BaseUpdateDialogFragment extends DialogFragment {
                     public void onClick(DialogInterface dialog, int which) {
                         dialog.dismiss();
                         openDownloadTask();
+                    }
+                }).show();
+    }
+    /**
+     * 通知权限
+     */
+    public void showNotifyPermissionDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
+        builder.setTitle("温馨提示")
+                .setMessage("下载更新需要允许应用通知,是否打开应用通知")
+                .setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                })
+                .setPositiveButton("去打开", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                        Intent intent = new Intent();
+
+                        //android 8.0引导
+                        if(Build.VERSION.SDK_INT >=26){
+                            intent.setAction("android.settings.APP_NOTIFICATION_SETTINGS");
+                            intent.putExtra("android.provider.extra.APP_PACKAGE", getActivity().getPackageName());
+                        }else if(Build.VERSION.SDK_INT >=21 && Build.VERSION.SDK_INT <26) {//android 5.0-7.0
+                            intent.setAction("android.settings.APP_NOTIFICATION_SETTINGS");
+                            intent.putExtra("app_package", getActivity().getPackageName());
+                            intent.putExtra("app_uid", getActivity().getApplicationInfo().uid);
+                        }else if(Build.VERSION.SDK_INT <21){//其他
+                            intent.setAction("android.settings.APPLICATION_DETAILS_SETTINGS");
+                            intent.setData(Uri.fromParts("package", getActivity().getPackageName(), null));
+                        }
+//
+//                        intent.setAction(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS);
+//                        Uri uri = Uri.fromParts("package", getActivity().getApplicationContext().getPackageName(), null);
+//                        intent.setData(uri);
+                        startActivity(intent);
                     }
                 }).show();
     }

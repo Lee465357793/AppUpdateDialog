@@ -186,7 +186,7 @@ public abstract class BaseUpdateDialogFragment extends DialogFragment {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         dialog.dismiss();
-                        openDownloadTask();
+                        checkPermission();
                     }
                 }).show();
     }

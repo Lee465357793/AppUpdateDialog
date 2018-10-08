@@ -1,6 +1,11 @@
 # AppUpdateDialog
 App应用更新Library
-AppUpdateDialog for Android ；使用DialogFragment 实现自动更新，动态权限申请
+AppUpdateDialog for Android ；使用DialogFragment 实现自动更新，动态权限
+
+添加依赖
+```java
+    implementation 'com.github.Lee465357793:AppUpdateDialog:1.３'
+```
 
 效果预
 -------

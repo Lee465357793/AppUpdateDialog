@@ -2,8 +2,10 @@
 App应用更新Library
 AppUpdateDialog for Android ；
 使用DialogFragment 实现自动更新，兼容Android 8.0（读文件，通知栏）， 动态权限获取
-
+GitHub:  https://github.com/Lee465357793/AppUpdateDialog
+    
 添加依赖
+-------
 ```java
     implementation 'com.github.Lee465357793:AppUpdateDialog:1.3'
 ```

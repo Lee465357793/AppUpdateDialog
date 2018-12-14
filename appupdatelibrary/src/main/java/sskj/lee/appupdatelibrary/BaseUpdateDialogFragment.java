@@ -6,6 +6,7 @@ import android.app.DialogFragment;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -173,7 +174,7 @@ public abstract class BaseUpdateDialogFragment extends DialogFragment {
      */
     public void showMustUpDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
-        builder.setTitle("温馨提示")
+        AlertDialog dialog = builder.setTitle("温馨提示")
                 .setMessage("本次更新是我们的一大步，放弃更新将会退出应用哦~!")
                 .setNegativeButton("关闭应用", new DialogInterface.OnClickListener() {
                     @Override
@@ -189,13 +190,15 @@ public abstract class BaseUpdateDialogFragment extends DialogFragment {
                         checkPermission();
                     }
                 }).show();
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.BLUE);
+        dialog.getButton(DialogInterface.BUTTON_NEGATIVE).setTextColor(Color.BLUE);
     }
     /**
      * 通知权限
      */
     public void showNotifyPermissionDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
-        builder.setTitle("温馨提示")
+        AlertDialog dialog = builder.setTitle("温馨提示")
                 .setMessage("下载更新需要允许应用通知,是否打开应用通知")
                 .setNegativeButton("取消", new DialogInterface.OnClickListener() {
                     @Override
@@ -208,26 +211,13 @@ public abstract class BaseUpdateDialogFragment extends DialogFragment {
                     public void onClick(DialogInterface dialog, int which) {
                         dialog.dismiss();
                         Intent intent = new Intent();
-
-                        //android 8.0引导
-                        if(Build.VERSION.SDK_INT >=26){
-                            intent.setAction("android.settings.APP_NOTIFICATION_SETTINGS");
-                            intent.putExtra("android.provider.extra.APP_PACKAGE", getActivity().getPackageName());
-                        }else if(Build.VERSION.SDK_INT >=21 && Build.VERSION.SDK_INT <26) {//android 5.0-7.0
-                            intent.setAction("android.settings.APP_NOTIFICATION_SETTINGS");
-                            intent.putExtra("app_package", getActivity().getPackageName());
-                            intent.putExtra("app_uid", getActivity().getApplicationInfo().uid);
-                        }else if(Build.VERSION.SDK_INT <21){//其他
-                            intent.setAction("android.settings.APPLICATION_DETAILS_SETTINGS");
-                            intent.setData(Uri.fromParts("package", getActivity().getPackageName(), null));
-                        }
-//
-//                        intent.setAction(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS);
-//                        Uri uri = Uri.fromParts("package", getActivity().getApplicationContext().getPackageName(), null);
-//                        intent.setData(uri);
+                        intent.setAction("android.settings.APPLICATION_DETAILS_SETTINGS");
+                        intent.setData(Uri.fromParts("package", getActivity().getPackageName(), null));
                         startActivity(intent);
                     }
                 }).show();
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.BLUE);
+        dialog.getButton(DialogInterface.BUTTON_NEGATIVE).setTextColor(Color.BLUE);
     }
 
     public class DownloadTask extends AsyncTask<String, Integer, File> {

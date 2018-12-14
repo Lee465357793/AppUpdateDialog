@@ -7,7 +7,7 @@ GitHub:  https://github.com/Lee465357793/AppUpdateDialog
 添加依赖
 -------
 ```java
-    implementation 'com.github.Lee465357793:AppUpdateDialog:1.3'
+    implementation 'com.github.Lee465357793:AppUpdateDialog:1.4'
 ```
 
 效果预

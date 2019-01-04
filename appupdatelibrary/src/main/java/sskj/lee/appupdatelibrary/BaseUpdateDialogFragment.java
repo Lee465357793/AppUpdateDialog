@@ -114,7 +114,7 @@ public abstract class BaseUpdateDialogFragment extends DialogFragment {
             Intent intent = new Intent();
             intent.setAction(Intent.ACTION_VIEW);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            intent.setFlags(FLAG_GRANT_READ_URI_PERMISSION);
+            intent.addFlags(FLAG_GRANT_READ_URI_PERMISSION);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 Uri contentUri = FileProvider.getUriForFile(mActivity, mActivity.getPackageName() + ".fileProvider", file);
                 intent.putExtra(MediaStore.EXTRA_OUTPUT, contentUri);
@@ -311,9 +311,9 @@ public abstract class BaseUpdateDialogFragment extends DialogFragment {
         @Override
         protected void onPostExecute(File file) {
             super.onPostExecute(file);
-            dismiss();//关闭下载中弹窗
             onDownLoadFinish(file);
             mDownloadTask.cancel(true);
+            dismissAllowingStateLoss();//关闭下载中弹窗,升级过程中然后home按键等下载完毕后会crash
         }
     }
 }

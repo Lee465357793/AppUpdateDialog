@@ -2,7 +2,8 @@ package sskj.lee.appupdatelibrary;
 
 import android.Manifest;
 import android.app.Activity;
-import android.app.DialogFragment;
+import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -13,14 +14,15 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
-import android.provider.Settings;
+
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
-import android.support.v7.app.AlertDialog;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -51,21 +53,28 @@ public abstract class BaseUpdateDialogFragment extends DialogFragment {
     private int PERMISSION_REQUEST_WRITE_SD = 1024;
     public static String INTENT_KEY = "result_key";
     private DownloadTask mDownloadTask;
+    public static final String DOWNLOAD_PATH = "%1$s/%2$s/download";
+    public static final String DIALOG_SDCARD_NULL = "未检测到SD卡";
+    private int retryCount = 0;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setCancelable(false);
         setStyle(DialogFragment.STYLE_NO_TITLE, R.style.Theme_Design_BottomSheetDialog_NoActionBar);
-
     }
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
-        View inflate = LayoutInflater.from(getActivity()).inflate(getLayoutId(), null);
-        mActivity = getActivity();
+        View inflate  = LayoutInflater.from(mActivity).inflate(getLayoutId(), null);
         return inflate;
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        mActivity = (Activity) context;
     }
 
     @Override
@@ -107,6 +116,7 @@ public abstract class BaseUpdateDialogFragment extends DialogFragment {
 
     /**
      * 当下在完成
+     *
      * @param file
      */
     protected void onDownLoadFinish(File file) {
@@ -116,14 +126,15 @@ public abstract class BaseUpdateDialogFragment extends DialogFragment {
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             intent.addFlags(FLAG_GRANT_READ_URI_PERMISSION);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                Uri contentUri = FileProvider.getUriForFile(mActivity, mActivity.getPackageName() + ".fileProvider", file);
+                Uri contentUri = FileProvider.getUriForFile(mActivity, "sskj.lee.appupdatelibrary.appUpdateFileProvider", file);
                 intent.putExtra(MediaStore.EXTRA_OUTPUT, contentUri);
                 intent.setDataAndType(contentUri, "application/vnd.android.package-archive");
             } else {
                 intent.setDataAndType(Uri.fromFile(file), "application/vnd.android.package-archive");
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             }
-            startActivity(intent);
+            if(isAdded()) startActivity(intent);
+        }else {
+            Toast.makeText(mActivity, "下载出错，请在[个人中心]检测下载新版本", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -133,18 +144,25 @@ public abstract class BaseUpdateDialogFragment extends DialogFragment {
     void checkPermission() {
         if (ContextCompat.checkSelfPermission(mActivity, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(mActivity, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, PERMISSION_REQUEST_WRITE_SD);
+            Toast.makeText(mActivity, "请在应用设置中开启 [文件读写] 权限", Toast.LENGTH_SHORT).show();
         } else {
-            if (!TextUtils.isEmpty(mVersionData.getUrl())){
-                if (mVersionData.isMustUp()) {
-                    openDownloadTask();
-                } else if (mVersionData.getViewStyle() == BaseVersion.NOTIFYCATION_STYLE) {
-                    mActivity.startService(new Intent(mActivity, NotifyDownloadService.class).putExtra(INTENT_KEY, mVersionData));
-                    dismiss();//关掉更新提示dialog
-                } else {
-                    openDownloadTask();
-                }
-            }else {
-                Toast.makeText(getActivity(), "下载地址不能为空", Toast.LENGTH_SHORT).show();
+            if(TextUtils.isEmpty(mVersionData.getUrl())){
+                Toast.makeText(mActivity, "下载地址为空", Toast.LENGTH_SHORT).show();
+                dismiss();
+                return;
+            }
+            if(!mVersionData.getUrl().contains("apk")){
+                Toast.makeText(mActivity, "下载地址异常", Toast.LENGTH_SHORT).show();
+                dismiss();
+                return;
+            }
+            if (mVersionData.isMustUp()) {
+                openDownloadTask();
+            } else if (mVersionData.getViewStyle() == BaseVersion.NOTIFYCATION_STYLE) {
+                mActivity.startService(new Intent(mActivity, NotifyDownloadService.class).putExtra(INTENT_KEY, mVersionData));
+                dismiss();//关掉更新提示dialog
+            } else {
+                openDownloadTask();
             }
         }
     }
@@ -180,7 +198,7 @@ public abstract class BaseUpdateDialogFragment extends DialogFragment {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         dialog.dismiss();
-                        getActivity().finish();
+                        mActivity.finish();
                     }
                 })
                 .setPositiveButton("继续更新", new DialogInterface.OnClickListener() {
@@ -193,6 +211,7 @@ public abstract class BaseUpdateDialogFragment extends DialogFragment {
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.BLUE);
         dialog.getButton(DialogInterface.BUTTON_NEGATIVE).setTextColor(Color.BLUE);
     }
+
     /**
      * 通知权限
      */
@@ -212,7 +231,7 @@ public abstract class BaseUpdateDialogFragment extends DialogFragment {
                         dialog.dismiss();
                         Intent intent = new Intent();
                         intent.setAction("android.settings.APPLICATION_DETAILS_SETTINGS");
-                        intent.setData(Uri.fromParts("package", getActivity().getPackageName(), null));
+                        intent.setData(Uri.fromParts("package", mActivity.getPackageName(), null));
                         startActivity(intent);
                     }
                 }).show();
@@ -227,6 +246,7 @@ public abstract class BaseUpdateDialogFragment extends DialogFragment {
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
+            retryCount++;
             onDownLoadStart();
         }
 
@@ -239,7 +259,7 @@ public abstract class BaseUpdateDialogFragment extends DialogFragment {
                 FileOutputStream fos = null;
                 HttpURLConnection conn = null;
                 try {
-                    String savePath = String.format(Contacts.DOWNLOAD_PATH, Environment.getExternalStorageDirectory(), mActivity.getPackageName());
+                    String savePath = String.format(DOWNLOAD_PATH, Environment.getExternalStorageDirectory(), mActivity.getPackageName());
                     URL url = new URL(mVersionData.getUrl());
                     conn = (HttpURLConnection) url.openConnection();
                     conn.setRequestProperty("Accept-Encoding", "identity");
@@ -272,18 +292,37 @@ public abstract class BaseUpdateDialogFragment extends DialogFragment {
 
                 } catch (MalformedURLException e) {
                     e.printStackTrace();
+                    mDownloadTask.cancel(true);
+                    mDownloadTask = null;
+                    dismissAllowingStateLoss();
+                    onDownLoadFinish(null);
+                    e.printStackTrace();
                 } catch (IOException e) {
                     e.printStackTrace();
+                    mDownloadTask.cancel(true);
+                    mDownloadTask = null;
+                    if(retryCount < 3) {
+                        openDownloadTask();
+                    }else {
+                        dismissAllowingStateLoss();
+                        onDownLoadFinish(null);
+                    }
                 } finally {
                     try {
-                        if (fos != null) fos.close();
-                        if (is != null) is.close();
+                        if (fos != null) {
+                            fos.close();
+                        }
+                        if (is != null) {
+                            is.close();
+                        }
                     } catch (IOException ignored) {
                     }
-                    if (conn != null) conn.disconnect();
+                    if (conn != null) {
+                        conn.disconnect();
+                    }
                 }
             } else {
-                Toast.makeText(mActivity, Contacts.DIALOG_SDCARD_NULL, Toast.LENGTH_SHORT).show();
+                Toast.makeText(mActivity, DIALOG_SDCARD_NULL, Toast.LENGTH_SHORT).show();
             }
             return apkFile;
         }
@@ -313,7 +352,7 @@ public abstract class BaseUpdateDialogFragment extends DialogFragment {
             super.onPostExecute(file);
             onDownLoadFinish(file);
             mDownloadTask.cancel(true);
-            dismissAllowingStateLoss();//关闭下载中弹窗,升级过程中然后home按键等下载完毕后会crash
+            dismissAllowingStateLoss();//关闭下载中弹窗
         }
     }
 }

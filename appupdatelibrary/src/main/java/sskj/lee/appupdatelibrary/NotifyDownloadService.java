@@ -28,6 +28,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 import static android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION;
+import static sskj.lee.appupdatelibrary.BaseUpdateDialogFragment.DIALOG_SDCARD_NULL;
+import static sskj.lee.appupdatelibrary.BaseUpdateDialogFragment.DOWNLOAD_PATH;
 
 public class NotifyDownloadService extends Service {
     /**
@@ -129,7 +131,7 @@ public class NotifyDownloadService extends Service {
                 FileOutputStream fos= null;
                 HttpURLConnection conn= null;
                 try {
-                    String savePath = String.format(Contacts.DOWNLOAD_PATH, Environment.getExternalStorageDirectory(), getPackageName());
+                    String savePath = String.format(DOWNLOAD_PATH, Environment.getExternalStorageDirectory(), getPackageName());
                     URL url = new URL(mBaseVersion.getUrl());
                     conn = (HttpURLConnection) url.openConnection();
                     //处理下载读取长度为-1 问题
@@ -178,8 +180,12 @@ public class NotifyDownloadService extends Service {
                     is.close();
 
                 } catch (MalformedURLException e) {
+                    mDownloadTask.cancel(true);
+                    mDownloadTask = null;
                     e.printStackTrace();
                 } catch (IOException e) {
+                    mDownloadTask.cancel(true);
+                    mDownloadTask = null;
                     e.printStackTrace();
                 }finally {
                     try {
@@ -190,7 +196,7 @@ public class NotifyDownloadService extends Service {
                     if (conn != null) conn.disconnect();
                 }
             }else {
-                Toast.makeText(getApplicationContext(), Contacts.DIALOG_SDCARD_NULL, Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), DIALOG_SDCARD_NULL, Toast.LENGTH_SHORT).show();
             }
             return apkFile;
         }
@@ -215,14 +221,13 @@ public class NotifyDownloadService extends Service {
                 Intent intent = new Intent();
                 intent.setAction(Intent.ACTION_VIEW);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                intent.setFlags(FLAG_GRANT_READ_URI_PERMISSION);
+                intent.addFlags(FLAG_GRANT_READ_URI_PERMISSION);
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    Uri contentUri = FileProvider.getUriForFile(getApplicationContext(), getPackageName() + ".fileProvider", file);
+                    Uri contentUri = FileProvider.getUriForFile(getApplicationContext(), "sskj.lee.appupdatelibrary.appUpdateFileProvider", file);
                     intent.putExtra(MediaStore.EXTRA_OUTPUT, contentUri);
                     intent.setDataAndType(contentUri, "application/vnd.android.package-archive");
                 } else {
                     intent.setDataAndType(Uri.fromFile(file), "application/vnd.android.package-archive");
-                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 }
                 startActivity(intent);
             }

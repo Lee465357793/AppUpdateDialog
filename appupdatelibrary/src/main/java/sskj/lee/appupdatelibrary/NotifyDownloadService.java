@@ -47,21 +47,21 @@ public class NotifyDownloadService extends Service {
     private NotificationCompat.Builder mBuilder;
 
     @Nullable
-    @Override  
+    @Override
     public IBinder onBind(Intent intent) {
         return null;
     }
-  
-    @Override  
-    public void onCreate() {  
+
+    @Override
+    public void onCreate() {
         super.onCreate();
         mDownloadTask = new DownloadTask();
         mNotificationManager  = (NotificationManager) getSystemService(android.content.Context.NOTIFICATION_SERVICE);
     }
 
-  
-    @Override  
-    public void onStart(Intent intent, int startId) {  
+
+    @Override
+    public void onStart(Intent intent, int startId) {
         super.onStart(intent, startId);
         if (intent != null){
 
@@ -71,13 +71,13 @@ public class NotifyDownloadService extends Service {
             }
         }
     }
-  
-    @Override  
+
+    @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        return super.onStartCommand(intent, flags, startId);  
-    }  
-  
-    @Override  
+        return super.onStartCommand(intent, flags, startId);
+    }
+
+    @Override
     public void onDestroy() {
         super.onDestroy();
         mNotificationManager.cancelAll();
@@ -98,7 +98,7 @@ public class NotifyDownloadService extends Service {
                     .setSmallIcon(mBaseVersion.getNotifyIcon())
                     .setOngoing(true)
                     .setContentIntent(getDefalutIntent(Notification.FLAG_ONGOING_EVENT))
-                    .setContentTitle("正在下载")
+                    .setContentTitle("正在下载新版本")
                     .setProgress(100, 0, false).build();
         }else {
             mBuilder = new NotificationCompat.Builder(getApplicationContext());
@@ -106,7 +106,7 @@ public class NotifyDownloadService extends Service {
                     .setSmallIcon(mBaseVersion.getNotifyIcon())
                     .setLargeIcon(BitmapFactory.decodeResource(getResources(), mBaseVersion.getNotifyIcon()))
                     .setOngoing(true)
-                    .setContentTitle("正在下载")
+                    .setContentTitle("正在下载新版本")
                     .setContentIntent(getDefalutIntent(Notification.FLAG_ONGOING_EVENT))
                     .setProgress(100, 0, false).build();
         }
@@ -131,7 +131,8 @@ public class NotifyDownloadService extends Service {
                 FileOutputStream fos= null;
                 HttpURLConnection conn= null;
                 try {
-                    String savePath = String.format(DOWNLOAD_PATH, Environment.getExternalStorageDirectory(), getPackageName());
+                    String savePath = String.format(DOWNLOAD_PATH, getExternalFilesDir(null), getPackageName());
+
                     URL url = new URL(mBaseVersion.getUrl());
                     conn = (HttpURLConnection) url.openConnection();
                     //处理下载读取长度为-1 问题
@@ -180,12 +181,8 @@ public class NotifyDownloadService extends Service {
                     is.close();
 
                 } catch (MalformedURLException e) {
-                    mDownloadTask.cancel(true);
-                    mDownloadTask = null;
                     e.printStackTrace();
                 } catch (IOException e) {
-                    mDownloadTask.cancel(true);
-                    mDownloadTask = null;
                     e.printStackTrace();
                 }finally {
                     try {
@@ -222,13 +219,7 @@ public class NotifyDownloadService extends Service {
                 intent.setAction(Intent.ACTION_VIEW);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 intent.addFlags(FLAG_GRANT_READ_URI_PERMISSION);
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    Uri contentUri = FileProvider.getUriForFile(getApplicationContext(), "sskj.lee.appupdatelibrary.appUpdateFileProvider", file);
-                    intent.putExtra(MediaStore.EXTRA_OUTPUT, contentUri);
-                    intent.setDataAndType(contentUri, "application/vnd.android.package-archive");
-                } else {
-                    intent.setDataAndType(Uri.fromFile(file), "application/vnd.android.package-archive");
-                }
+                intent.setDataAndType(Uri.fromFile(file), "application/vnd.android.package-archive");
                 startActivity(intent);
             }
             mDownloadTask.cancel(true);

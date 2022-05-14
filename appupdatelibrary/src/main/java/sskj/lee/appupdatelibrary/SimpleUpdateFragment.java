@@ -80,7 +80,7 @@ public class SimpleUpdateFragment extends BaseUpdateDialogFragment implements Vi
                 dismiss();
             }
         }else if (vid == R.id.update_dialog_confirm){
-            NotificationManagerCompat manager = NotificationManagerCompat.from(getActivity().getApplicationContext());
+            NotificationManagerCompat manager = NotificationManagerCompat.from(mActivity.getApplicationContext());
             boolean isOpened = manager.areNotificationsEnabled();
             if (isOpened){
                 startDownload();

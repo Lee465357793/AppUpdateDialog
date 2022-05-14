@@ -10,19 +10,15 @@ import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.provider.MediaStore;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.content.FileProvider;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -48,12 +44,12 @@ import static android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION;
  */
 public abstract class BaseUpdateDialogFragment extends DialogFragment {
 
-    private Activity mActivity;
+    public Activity mActivity;
     public BaseVersion mVersionData;
     private int PERMISSION_REQUEST_WRITE_SD = 1024;
     public static String INTENT_KEY = "result_key";
     private DownloadTask mDownloadTask;
-    public static final String DOWNLOAD_PATH = "%1$s/%2$s/download";
+    public static final String DOWNLOAD_PATH = "%1$s/%2$s/Download";
     public static final String DIALOG_SDCARD_NULL = "未检测到SD卡";
     private int retryCount = 0;
 
@@ -125,13 +121,7 @@ public abstract class BaseUpdateDialogFragment extends DialogFragment {
             intent.setAction(Intent.ACTION_VIEW);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             intent.addFlags(FLAG_GRANT_READ_URI_PERMISSION);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                Uri contentUri = FileProvider.getUriForFile(mActivity, "sskj.lee.appupdatelibrary.appUpdateFileProvider", file);
-                intent.putExtra(MediaStore.EXTRA_OUTPUT, contentUri);
-                intent.setDataAndType(contentUri, "application/vnd.android.package-archive");
-            } else {
-                intent.setDataAndType(Uri.fromFile(file), "application/vnd.android.package-archive");
-            }
+            intent.setDataAndType(Uri.fromFile(file), "application/vnd.android.package-archive");
             if(isAdded()) startActivity(intent);
         }else {
             Toast.makeText(mActivity, "下载出错，请在[个人中心]检测下载新版本", Toast.LENGTH_SHORT).show();
@@ -259,7 +249,7 @@ public abstract class BaseUpdateDialogFragment extends DialogFragment {
                 FileOutputStream fos = null;
                 HttpURLConnection conn = null;
                 try {
-                    String savePath = String.format(DOWNLOAD_PATH, Environment.getExternalStorageDirectory(), mActivity.getPackageName());
+                    String savePath = String.format(DOWNLOAD_PATH, getContext().getExternalFilesDir(null), mActivity.getPackageName());
                     URL url = new URL(mVersionData.getUrl());
                     conn = (HttpURLConnection) url.openConnection();
                     conn.setRequestProperty("Accept-Encoding", "identity");
